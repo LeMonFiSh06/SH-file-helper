@@ -30,6 +30,7 @@ class PptExtractResult:
     def to_text(self) -> str:
         sections = []
         for slide in self.slides:
+            sections.append("")
             sections.append(f"Slide {slide.slide_number}")
             sections.append("")
             sections.extend(slide.lines)
