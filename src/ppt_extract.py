@@ -31,6 +31,7 @@ class PptExtractResult:
         sections = []
         for slide in self.slides:
             sections.append(f"Slide {slide.slide_number}")
+            sections.append("")
             sections.extend(slide.lines)
         return "\n".join(sections)
 
@@ -72,7 +73,7 @@ def _extract_shape_text(shape, language: str) -> List[str]:
             for cell in row.cells:
                 cell_text = cell.text.strip()
                 if cell_text:
-                    lines.append(cell_text)
+                    lines.append(f"[Table] {cell_text}")
 
     if shape.shape_type == MSO_SHAPE_TYPE.PICTURE:
         try:
@@ -83,7 +84,7 @@ def _extract_shape_text(shape, language: str) -> List[str]:
         for line in ocr_text.splitlines():
             cleaned = line.strip()
             if cleaned:
-                lines.append(cleaned)
+                lines.append(f"[OCR] {cleaned}")
 
     return lines
 
