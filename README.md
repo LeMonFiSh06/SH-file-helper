@@ -25,3 +25,7 @@
    ```bash
    python -c "from pathlib import Path; from src.ppt_extract import PptExtractRequest, extract_ppt_text; result = extract_ppt_text(PptExtractRequest(Path('input/sample.pptx'), language='eng')); Path('output/ppt_text.txt').write_text(result.to_text(), encoding='utf-8')"
    ```
+7. Run a service layer task queue snippet:
+   ```bash
+   python -c "from pathlib import Path; from src.service import ServiceLayer, OcrJobInput; service = ServiceLayer(); task = service.submit_ocr_image(OcrJobInput(input_path=Path('input/sample.png'), output_path=Path('output/ocr.txt'))); service.queue.run_all(); print(task.status)"
+   ```
