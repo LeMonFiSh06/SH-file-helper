@@ -7,6 +7,10 @@ from pathlib import Path
 from typing import Iterable, Sequence
 
 from PIL import Image
+from pdf2docx import Converter
+from pdf2image import convert_from_path
+from pptx import Presentation
+from pptx.util import Inches
 
 
 class ConversionMode(str, enum.Enum):
@@ -37,11 +41,13 @@ def convert(request: ConversionRequest) -> Path:
     """
     if request.mode in {
         ConversionMode.PPTX_TO_PDF,
-        ConversionMode.PDF_TO_PPTX,
         ConversionMode.DOCX_TO_PDF,
-        ConversionMode.PDF_TO_DOCX,
     }:
         _convert_with_libreoffice(request)
+    elif request.mode == ConversionMode.PDF_TO_DOCX:
+        _convert_pdf_to_docx(request)
+    elif request.mode == ConversionMode.PDF_TO_PPTX:
+        _convert_pdf_to_pptx(request)
     elif request.mode == ConversionMode.IMAGE_TO_PDF:
         _convert_single_image_to_pdf(request.input_paths, request.output_path)
     elif request.mode == ConversionMode.IMAGES_TO_PDF:
@@ -93,9 +99,7 @@ def _convert_with_libreoffice(request: ConversionRequest) -> None:
 def _libreoffice_target_format(mode: ConversionMode) -> str:
     mapping = {
         ConversionMode.PPTX_TO_PDF: "pdf",
-        ConversionMode.PDF_TO_PPTX: "pptx",
         ConversionMode.DOCX_TO_PDF: "pdf",
-        ConversionMode.PDF_TO_DOCX: "docx",
     }
     try:
         return mapping[mode]
@@ -133,3 +137,58 @@ def _convert_multiple_images_to_pdf(input_paths: Iterable[Path], output_path: Pa
 
     cover, *rest = images
     cover.save(output_path, format="PDF", save_all=True, append_images=rest)
+
+
+def _convert_pdf_to_docx(request: ConversionRequest) -> None:
+    if len(request.input_paths) != 1:
+        raise ConversionError("PDF-to-DOCX conversion requires exactly one input file.")
+
+    input_path = request.input_paths[0]
+    output_path = request.output_path
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    converter = Converter(str(input_path))
+    try:
+        converter.convert(str(output_path), start=0)
+    except Exception as exc:  # noqa: BLE001
+        raise ConversionError(f"PDF-to-DOCX conversion failed: {exc}") from exc
+    finally:
+        converter.close()
+
+
+def _convert_pdf_to_pptx(request: ConversionRequest) -> None:
+    if len(request.input_paths) != 1:
+        raise ConversionError("PDF-to-PPTX conversion requires exactly one input file.")
+
+    input_path = request.input_paths[0]
+    output_path = request.output_path
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    try:
+        images = convert_from_path(str(input_path), dpi=200)
+    except Exception as exc:  # noqa: BLE001
+        raise ConversionError(
+            "PDF-to-PPTX conversion failed while rendering pages. Ensure Poppler is installed."
+        ) from exc
+
+    presentation = Presentation()
+    blank_layout = presentation.slide_layouts[6]
+    for image in images:
+        slide = presentation.slides.add_slide(blank_layout)
+        width, height = image.size
+        slide_width = presentation.slide_width
+        slide_height = presentation.slide_height
+        image_stream = _image_to_stream(image)
+        slide.shapes.add_picture(image_stream, Inches(0), Inches(0), slide_width, slide_height)
+        image_stream.close()
+
+    presentation.save(str(output_path))
+
+
+def _image_to_stream(image: Image.Image):
+    from io import BytesIO
+
+    stream = BytesIO()
+    image.convert("RGB").save(stream, format="PNG")
+    stream.seek(0)
+    return stream

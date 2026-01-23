@@ -29,3 +29,15 @@
    ```bash
    python -c "from pathlib import Path; from src.service import ServiceLayer, OcrJobInput; service = ServiceLayer(); task = service.submit_ocr_image(OcrJobInput(input_path=Path('input/sample.png'), output_path=Path('output/ocr.txt'))); service.queue.run_all(); print(task.status)"
    ```
+   8. Run the conversion UI:
+   ```bash
+   python src/ui_conversion.py
+   ```
+
+   ## OCR settings
+   
+   1. DPI is set to 300 by default. Higher DPI means higher accuracy, but increase the misidentification rate.
+
+   ## Glossary settings
+
+   
