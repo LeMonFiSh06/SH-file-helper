@@ -8,3 +8,4 @@ dist/
 output/
 input/
 temp/
+!packaging/pyinstaller.spec
