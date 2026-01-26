@@ -5,6 +5,8 @@
 #define MyAppId "{{E6C7B6C1-0C3F-4E2E-9A27-1A8F1F1A0A5A}}"
 
 [Setup]
+PrivilegesRequired=lowest
+PrivilegesRequiredOverridesAllowed=dialog
 AppId={#MyAppId}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}

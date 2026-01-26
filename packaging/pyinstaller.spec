@@ -2,9 +2,9 @@
 
 from pathlib import Path
 
-project_root = Path(__file__).resolve().parents[1]
+project_root = Path.cwd()
 app_name = "SHFileHelper"
-entry_script = project_root / "src" / "ui_conversion.py"
+entry_script = project_root / "src" / "UI.py"
 
 # Bundle Tesseract binaries and tessdata. Place them under third_party/tesseract.
 # Expected layout:
