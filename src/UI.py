@@ -1,4 +1,5 @@
 from __future__ import annotations
+from runtime_paths import get_app_root
 
 import sys
 from dataclasses import dataclass
@@ -89,6 +90,8 @@ class ConversionWindow(QtWidgets.QMainWindow):
         layout.addWidget(self.status_label)
 
         self._update_conversion_output_placeholder(self.mode_combo.currentText())
+        self._check_runtime_deps()
+
 
     def _build_conversion_tab(self) -> QtWidgets.QWidget:
         tab = QtWidgets.QWidget()
@@ -395,7 +398,30 @@ class ConversionWindow(QtWidgets.QMainWindow):
 
     def _set_status(self, message: str) -> None:
         self.status_label.setText(message)
+    
+    def _check_runtime_deps(self) -> None:
+        app_root = get_app_root()
+        tesseract_exe = app_root / "tesseract" / "tesseract.exe"
+        tessdata_dir = app_root / "tesseract" / "tessdata"
 
+        if not tesseract_exe.exists():
+            self._set_status("Warning: Tesseract not found, OCR may fail.")
+            return
+
+        required = {"eng.traineddata"}
+        selection = {self.ocr_lang.currentText().strip(), self.glossary_lang.currentText().strip()}
+        if "chi_sim+eng" in selection:
+            required.update({"chi_sim.traineddata", "eng.traineddata"})
+        elif "chi_sim" in selection:
+            required.add("chi_sim.traineddata")
+
+        missing = [name for name in required if not (tessdata_dir / name).exists()]
+        if missing:
+            self._set_status(
+                "Warning: Missing tessdata files: " + ", ".join(missing)
+            )
+        else:
+            self._set_status("Ready (Tesseract OK)")
 
 def _output_suffix(mode: ConversionMode) -> str:
     mapping = {

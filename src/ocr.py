@@ -2,11 +2,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+import os
 from typing import Iterable, List
 
 from pdf2image import convert_from_path
 from PIL import Image
 import pytesseract
+
+from runtime_paths import get_app_root
 
 
 @dataclass(frozen=True)
@@ -32,7 +35,11 @@ class OcrError(RuntimeError):
     pass
 
 
+_TESSERACT_READY = False
+
+
 def ocr_image(request: OcrRequest) -> OcrResult:
+    setup_tesseract()
     if not request.input_path.exists():
         raise OcrError(f"Input image not found: {request.input_path}")
 
@@ -43,6 +50,7 @@ def ocr_image(request: OcrRequest) -> OcrResult:
 
 
 def ocr_pdf(request: OcrRequest) -> OcrResult:
+    setup_tesseract()
     if not request.input_path.exists():
         raise OcrError(f"Input PDF not found: {request.input_path}")
 
@@ -64,3 +72,22 @@ def _ocr_images(images: Iterable[Image.Image], language: str) -> List[OcrPageRes
         text = pytesseract.image_to_string(image, lang=language)
         results.append(OcrPageResult(page_number=index, text=text))
     return results
+
+
+def setup_tesseract() -> None:
+    """Configure pytesseract to use bundled binaries when available."""
+    global _TESSERACT_READY
+    if _TESSERACT_READY:
+        return
+    _TESSERACT_READY = True
+
+    if os.environ.get("TESSERACT_CMD"):
+        pytesseract.pytesseract.tesseract_cmd = os.environ["TESSERACT_CMD"]
+        return
+
+    app_root = get_app_root()
+    tesseract_exe = app_root / "tesseract" / "tesseract.exe"
+    if tesseract_exe.exists():
+        pytesseract.pytesseract.tesseract_cmd = str(tesseract_exe)
+        os.environ.setdefault("TESSDATA_PREFIX", str(app_root / "tesseract"))
+        return

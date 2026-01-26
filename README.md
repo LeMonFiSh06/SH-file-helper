@@ -1,5 +1,5 @@
 # SH-file-helper
-
+github.com/lemonfish06/SH-file-helper
 ## How to test
 
 1. Install Python dependencies:

@@ -10,6 +10,7 @@ from pptx import Presentation
 from pptx.enum.shapes import MSO_SHAPE_TYPE
 import pytesseract
 
+from ocr import setup_tesseract
 
 @dataclass(frozen=True)
 class PptExtractRequest:
@@ -30,7 +31,6 @@ class PptExtractResult:
     def to_text(self) -> str:
         sections = []
         for slide in self.slides:
-            sections.append("")
             sections.append(f"Slide {slide.slide_number}")
             sections.append("")
             sections.extend(slide.lines)
@@ -42,6 +42,7 @@ class PptExtractError(RuntimeError):
 
 
 def extract_ppt_text(request: PptExtractRequest) -> PptExtractResult:
+    setup_tesseract()
     if not request.input_path.exists():
         raise PptExtractError(f"Input file not found: {request.input_path}")
 
