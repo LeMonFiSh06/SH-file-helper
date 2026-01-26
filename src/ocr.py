@@ -11,7 +11,6 @@ import pytesseract
 
 from runtime_paths import get_app_root
 
-
 @dataclass(frozen=True)
 class OcrRequest:
     input_path: Path
@@ -79,7 +78,33 @@ def setup_tesseract() -> None:
     global _TESSERACT_READY
     if _TESSERACT_READY:
         return
+
+    # 1) Allow override via environment variable (dev / CI)
+    tcmd = os.environ.get("TESSERACT_CMD")
+    if tcmd:
+        pytesseract.pytesseract.tesseract_cmd = tcmd
+        # If user also provided tessdata path, respect it; otherwise keep existing.
+        _TESSERACT_READY = True
+        return
+
+    # 2) Prefer bundled tesseract next to the exe (dist/YourApp/tesseract/...)
+    app_root = get_app_root()
+
+    tesseract_root = app_root / "tesseract"
+    tesseract_exe = tesseract_root / "tesseract.exe"
+    tessdata_dir = tesseract_root / "tessdata"
+
+    if tesseract_exe.exists():
+        pytesseract.pytesseract.tesseract_cmd = str(tesseract_exe)
+
+    # IMPORTANT: point TESSDATA_PREFIX to the directory that contains *.traineddata
+    # (i.e., .../tesseract/tessdata). This fixes "Error opening data file ... traineddata".
+    if tessdata_dir.exists():
+        os.environ["TESSDATA_PREFIX"] = str(tessdata_dir)
+
+    # Mark ready at the end so a failed setup can retry later (e.g., during debugging)
     _TESSERACT_READY = True
+
 
     if os.environ.get("TESSERACT_CMD"):
         pytesseract.pytesseract.tesseract_cmd = os.environ["TESSERACT_CMD"]
