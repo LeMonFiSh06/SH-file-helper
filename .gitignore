@@ -9,3 +9,4 @@ output/
 input/
 temp/
 !packaging/pyinstaller.spec
+dist-installer/
