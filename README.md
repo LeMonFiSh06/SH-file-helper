@@ -68,6 +68,10 @@ No external OCR installation required
 Works fully offline
 
 ---
+## How to use
+- Select input file
+- Choose output path
+- Give a output file name 
 
 ## Technical Overview
 
