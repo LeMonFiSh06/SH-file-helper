@@ -25,6 +25,13 @@ This project was developed as a course / engineering project, with a focus on **
   - Japanese (`jpn`)
   - Korean (`kor`)
 
+### PPT Text Extraction
+- Supported languages (built-in):
+  - English (`eng`)
+  - Simplified Chinese (`chi_sim`)
+  - Japanese (`jpn`)
+  - Korean (`kor`)
+
 ### Glossary Generation
 - Extract technical terms from text / OCR results
 - Configurable:
