@@ -26,6 +26,7 @@ This project was developed as a course / engineering project, with a focus on **
   - Korean (`kor`)
 
 ### PPT Text Extraction
+- Extract text from PowerPoint slides for convenient translation
 - Supported languages (built-in):
   - English (`eng`)
   - Simplified Chinese (`chi_sim`)
